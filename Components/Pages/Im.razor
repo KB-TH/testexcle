@@ -1,0 +1,98 @@
+@page "/im"
+@using testexcle.Services
+@using System.Collections.Generic
+@using System.IO
+@using System.Threading.Tasks
+@using Microsoft.AspNetCore.Components.Forms
+@using testexcle.Models
+
+<h3>Import Excel</h3>
+
+<InputFile OnChange="HandleFileSelected" />
+
+<button @onclick="ShowData" class="btn btn-primary">Show Data</button>
+
+@if (importedProducts.Count > 0)
+{
+    <h4>Imported Products:</h4>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ReceiptDate</th>
+                <th>No</th>
+                <th>MasterCode</th>
+                <th>Secode</th>
+                <th>TrackingNo</th>
+                <th>WeightNo</th>
+                <th>CodNo</th>
+                <th>Note</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var product in importedProducts)
+            {
+                <tr>
+                    <td>@product.ReceiptDate</td>
+                    <td>@product.No</td>
+                    <td>@product.MasterCode</td>
+                    <td>@product.Secode</td>
+                    <td>@product.TrackingNo</td>
+                    <td>@product.WeightNo</td>
+                    <td>@product.CodNo</td>
+                    <td>@product.Note</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <button class="btn btn-danger" @onclick="ClearProducts">Clear</button>
+}
+else
+{
+    <p>No products imported yet.</p>
+}
+
+@inject ExcelImportService ExcelImportService
+@inject IJSRuntime JSRuntime
+@inject ExcelImportService1 ExcelImportService1
+
+@code {
+    private List<Product> importedProducts = new();
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            using var stream = file.OpenReadStream(10 * 1024 * 1024); // max 10MB
+            var importedData = await ExcelImportService1.ImportExcelAsync(stream);
+
+            // Map the imported data to Product objects
+            importedProducts = importedData.Select(data => new Product
+            {
+                ReceiptDate = data.ContainsKey("ReceiptDate") ? data["ReceiptDate"] : string.Empty,
+                No = data.ContainsKey("No") ? data["No"] : string.Empty,
+                MasterCode = data.ContainsKey("MasterCode") ? data["MasterCode"] : string.Empty,
+                Secode = data.ContainsKey("Secode") ? data["Secode"] : string.Empty,
+                TrackingNo = data.ContainsKey("TrackingNo") ? data["TrackingNo"] : string.Empty,
+                WeightNo = data.ContainsKey("WeightNo") ? data["WeightNo"] : string.Empty,
+                CodNo = data.ContainsKey("CodNo") ? data["CodNo"] : string.Empty,
+                Note = data.ContainsKey("Note") ? data["Note"] : string.Empty
+            }).ToList();
+
+            // Force UI to update once data is imported
+            StateHasChanged();
+        }
+    }
+
+    private void ClearProducts()
+    {
+        importedProducts.Clear();
+    }
+
+    private void ShowData()
+    {
+        // Trigger the display of data when the button is clicked
+        StateHasChanged(); // Forces the UI to update
+    }
+}

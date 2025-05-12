@@ -1,18 +1,14 @@
 @page "/im"
 @using testexcle.Services
-@using System.Collections.Generic
-@using System.IO
-@using System.Threading.Tasks
-@using Microsoft.AspNetCore.Components.Forms
 @using testexcle.Models
+@using Microsoft.AspNetCore.Components.Forms
+@rendermode InteractiveServer
 
 <h3>Import Excel</h3>
 
-<InputFile OnChange="HandleFileSelected" />
+<InputFile OnChange="HandleFileSelected" accept=".xlsx" />
 
-<button @onclick="ShowData" class="btn btn-primary">Show Data</button>
-
-@if (importedProducts.Count > 0)
+@if (importedProducts?.Count > 0)
 {
     <h4>Imported Products:</h4>
     <table class="table table-striped">
@@ -53,8 +49,6 @@ else
 }
 
 @inject ExcelImportService ExcelImportService
-@inject IJSRuntime JSRuntime
-@inject ExcelImportService1 ExcelImportService1
 
 @code {
     private List<Product> importedProducts = new();
@@ -64,35 +58,21 @@ else
         var file = e.File;
         if (file != null)
         {
-            using var stream = file.OpenReadStream(10 * 1024 * 1024); // max 10MB
-            var importedData = await ExcelImportService1.ImportExcelAsync(stream);
-
-            // Map the imported data to Product objects
-            importedProducts = importedData.Select(data => new Product
+            try
             {
-                ReceiptDate = data.ContainsKey("ReceiptDate") ? data["ReceiptDate"] : string.Empty,
-                No = data.ContainsKey("No") ? data["No"] : string.Empty,
-                MasterCode = data.ContainsKey("MasterCode") ? data["MasterCode"] : string.Empty,
-                Secode = data.ContainsKey("Secode") ? data["Secode"] : string.Empty,
-                TrackingNo = data.ContainsKey("TrackingNo") ? data["TrackingNo"] : string.Empty,
-                WeightNo = data.ContainsKey("WeightNo") ? data["WeightNo"] : string.Empty,
-                CodNo = data.ContainsKey("CodNo") ? data["CodNo"] : string.Empty,
-                Note = data.ContainsKey("Note") ? data["Note"] : string.Empty
-            }).ToList();
-
-            // Force UI to update once data is imported
-            StateHasChanged();
+                using var stream = file.OpenReadStream(10 * 1024 * 1024); // max 10MB
+                importedProducts = await ExcelImportService.ImportAsync(stream);
+            }
+            catch (Exception ex)
+            {
+                // Handle parsing or file errors here
+                Console.WriteLine($"Import failed: {ex.Message}");
+            }
         }
     }
 
     private void ClearProducts()
     {
         importedProducts.Clear();
-    }
-
-    private void ShowData()
-    {
-        // Trigger the display of data when the button is clicked
-        StateHasChanged(); // Forces the UI to update
     }
 }

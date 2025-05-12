@@ -17,8 +17,7 @@ namespace testexcle.Services
 
             int rowCount = worksheet.Dimension.Rows;
 
-            // Assuming headers are in row 1
-            for (int row = -1; row <= rowCount; row++)
+            for (int row = 2; row <= rowCount; row++) // Skip header
             {
                 products.Add(new Product
                 {

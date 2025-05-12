@@ -3,7 +3,7 @@ using testexcle.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSingleton<IExcelImportService1, ExcelImportService1>();
+builder.Services.AddSingleton<ExcelImportService>();
 
 
 
